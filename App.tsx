@@ -1,4 +1,11 @@
-import React from "react";
+import {
+    Easing,
+    withTiming,
+    withRepeat,
+    withSequence,
+    useSharedValue,
+} from "react-native-reanimated";
+import { useEffect } from "react";
 import { useWindowDimensions } from "react-native";
 import { Canvas, useImage, Image } from "@shopify/react-native-skia";
 
@@ -11,9 +18,19 @@ const App = () => {
     const pipeBottom = useImage(require("./assets/sprites/pipe-green.png"));
     const base = useImage(require("./assets/sprites/base.png"));
 
-    const pipeOffset = 0;
+    const x = useSharedValue(width);
 
-    const r = width * 0.33;
+    useEffect(() => {
+        x.value = withRepeat(
+            withSequence(
+                withTiming(-150, { duration: 3000, easing: Easing.linear }),
+                withTiming(width, { duration: 0 }),
+            ),
+            -1
+        );
+    }, []);
+
+    const pipeOffset = 0;
     return (
         <Canvas style={{ width, height }}>
             {/* Background */}
@@ -22,7 +39,7 @@ const App = () => {
             {/* Cano superior */}
             <Image
                 image={pipeTop}
-                x={width / 2}
+                x={x}
                 y={pipeOffset - 320}
                 width={103}
                 height={640}
@@ -31,7 +48,7 @@ const App = () => {
             {/* Cano inferior */}
             <Image
                 image={pipeBottom}
-                x={width / 2}
+                x={x}
                 y={height - 320 - pipeOffset}
                 width={103}
                 height={640}
@@ -40,10 +57,10 @@ const App = () => {
             {/* base */}
             <Image
                 image={base}
-                x={0}
-                y={height - 75}
                 width={width}
-                height={112}
+                height={150}
+                y={height - 75}
+                x={0}
                 fit={"cover"}
             />
 
