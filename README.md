@@ -24,18 +24,27 @@ Game Clone Flappy Bird criando na linguagem TypeScript utilizando framework reac
 
 ```bash
     # Clone o Repositório:
-    $ git clone https://github.com/SilvaneiMartins/game-super-mario-clone
+    $ git clone https://github.com/SilvaneiMartins/flappy-bird-react-native
 
     # Entre no Diretório:
-    cd game-super-mario-clone
+    cd flappy-bird-react-native
 
-    # executar o game
-    $ pressionar F5 do teclado, para executar o game.
+
+    # Instalar as dependências
+    $ yarn
+    $ npm install
+
+    # Executar expo go
+    $ expo start
+
+    # Executar no device
+    $ npx expo run:ios
+    $ npx expo run:android
 ```
 
 ## Licença
 
-Este projeto é licenciado sob [CC0 1.0 Universal]. Consulte o arquivo [LICENSE](https://github.com/SilvaneiMartins/sam-fitness/blob/master/LICENSE) para obter detalhes.
+Este projeto é licenciado sob [CC0 1.0 Universal]. Consulte o arquivo [LICENSE](https://github.com/SilvaneiMartins/flappy-bird-react-native/master/LICENSE) para obter detalhes.
 
 ## Informação do Desenvolvedor
 
