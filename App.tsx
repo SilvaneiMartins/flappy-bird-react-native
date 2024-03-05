@@ -6,28 +6,34 @@ import {
     useSharedValue,
     useFrameCallback,
     useDerivedValue,
+    useAnimatedReaction,
+    runOnJS,
 } from "react-native-reanimated";
+import {
+    Image,
+    Group,
+    Canvas,
+    useImage,
+    interpolate,
+    Extrapolate,
+    Text,
+    matchFont,
+} from "@shopify/react-native-skia";
 import {
     Gesture,
     GestureDetector,
     GestureHandlerRootView,
 } from "react-native-gesture-handler";
-import { useDebugValue, useEffect } from "react";
-import { useWindowDimensions } from "react-native";
-import {
-    Canvas,
-    useImage,
-    Image,
-    Group,
-    interpolate,
-    Extrapolate,
-} from "@shopify/react-native-skia";
+import { useEffect, useState } from "react";
+import { Platform, useWindowDimensions } from "react-native";
 
 const GRAVITY = 1000;
 const JUMP_FORCE = -500;
 
 const App = () => {
     const { width, height } = useWindowDimensions();
+
+    const [score, setScore] = useState(0);
 
     const bg = useImage(require("./assets/sprites/background-day.png"));
     const bird = useImage(require("./assets/sprites/bluebird-upflap.png"));
@@ -38,20 +44,8 @@ const App = () => {
     const x = useSharedValue(width);
 
     const birdY = useSharedValue(height / 3);
+    const birdPos = {  x: width / 4 };
     const birdYVelocity = useSharedValue(0);
-    const birdTransform = useDerivedValue(() => {
-        return [{ rotate: interpolate(birdYVelocity.value, [-500, 500], [-0.5, 0.5], Extrapolate.CLAMP) }]
-    });
-    const birdOrigin = useDerivedValue(() => {
-        return { x: width / 4 + 32, y: birdY.value + 24 }
-    });
-
-    useFrameCallback(({ timeSincePreviousFrame: dt }) => {
-        if (!dt) return;
-
-        birdY.value = birdY.value + (birdYVelocity.value * dt) / 1000;
-        birdYVelocity.value = birdYVelocity.value + (GRAVITY * dt) / 1000;
-    });
 
     useEffect(() => {
         x.value = withRepeat(
@@ -63,11 +57,60 @@ const App = () => {
         );
     }, []);
 
+    useAnimatedReaction(
+        () => birdY.value,
+        (currentValue, previousValue) => {
+            const middle = birdPos.x;
+
+            if (
+                currentValue !== previousValue &&
+                previousValue &&
+                currentValue <= middle &&
+                previousValue > middle
+            ) {
+                runOnJS(setScore)(score + 1);
+            }
+        }
+    );
+
+    useFrameCallback(({ timeSincePreviousFrame: dt }) => {
+        if (!dt) return;
+
+        birdY.value = birdY.value + (birdYVelocity.value * dt) / 1000;
+        birdYVelocity.value = birdYVelocity.value + (GRAVITY * dt) / 1000;
+    });
+
     const gesture = Gesture.Tap().onStart(() => {
         birdYVelocity.value = JUMP_FORCE;
     });
 
+    const birdTransform = useDerivedValue(() => {
+        return [
+            {
+                rotate: interpolate(
+                    birdYVelocity.value,
+                    [-500, 500],
+                    [-0.5, 0.5],
+                    Extrapolate.CLAMP
+                ),
+            },
+        ];
+    });
+
+    const birdOrigin = useDerivedValue(() => {
+        return { x: width / 4 + 32, y: birdY.value + 24 };
+    });
+
     const pipeOffset = 0;
+
+    const fontFamily = Platform.select({ ios: "Helvetica", default: "serif" });
+    const fontStyle: any = {
+        fontFamily,
+        fontSize: 40,
+        fontWeight: "bold",
+    };
+
+    const font = matchFont(fontStyle);
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
@@ -110,18 +153,23 @@ const App = () => {
                     />
 
                     {/* Pássaro */}
-                    <Group
-                        transform={birdTransform}
-                        origin={birdOrigin}
-                    >
+                    <Group transform={birdTransform} origin={birdOrigin}>
                         <Image
                             image={bird}
-                            x={width / 4}
+                            x={birdPos.x}
                             y={birdY}
                             width={64}
                             height={48}
                         />
                     </Group>
+
+                    {/* score */}
+                    <Text
+                        y={80}
+                        font={font}
+                        x={width * 0.05}
+                        text={score.toString()}
+                    ></Text>
                 </Canvas>
             </GestureDetector>
         </GestureHandlerRootView>
